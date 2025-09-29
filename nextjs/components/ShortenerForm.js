@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 
 const BACKEND_BASE =
@@ -10,23 +10,6 @@ export default function ShortenerForm() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [history, setHistory] = useState([]);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("shortener_history");
-      if (raw) setHistory(JSON.parse(raw));
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        "shortener_history",
-        JSON.stringify(history.slice(0, 10))
-      );
-    } catch {}
-  }, [history]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -53,9 +36,6 @@ export default function ShortenerForm() {
         setError(data?.error || "Unexpected error");
       } else {
         setResult(data.short_url);
-        setHistory((prev) =>
-          [{ url, short: data.short_url }, ...prev].slice(0, 10)
-        );
       }
     } catch (err) {
       setError("Backend unavailable. Is Docker Compose running?");
@@ -101,20 +81,6 @@ export default function ShortenerForm() {
         </div>
       )}
       {error && <div className="error">{error}</div>}
-      {history.length > 0 && (
-        <div className="helper" style={{ marginTop: 16 }}>
-          Gần đây:
-          <ul>
-            {history.map((h, idx) => (
-              <li key={idx}>
-                <span style={{ color: "#9fd1ff" }}>{h.short}</span>
-                <span> - </span>
-                <span style={{ color: "#a7b3cf" }}>{h.url}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </form>
   );
 }
