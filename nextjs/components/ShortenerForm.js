@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 
-const BACKEND_BASE =
-  process.env.NEXT_PUBLIC_BACKEND_BASE || "http://localhost:8080";
+// Prefer relative path + Next.js rewrites in production (Vercel)
+const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_BASE || "";
 
 export default function ShortenerForm() {
   const [url, setUrl] = useState("");
@@ -26,7 +26,8 @@ export default function ShortenerForm() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${BACKEND_BASE}/api/shorten`, {
+      const base = BACKEND_BASE ? BACKEND_BASE.replace(/\/$/, "") : "";
+      const res = await fetch(`${base}/api/shorten`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),

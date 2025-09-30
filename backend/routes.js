@@ -113,4 +113,51 @@ module.exports = async function routes(fastify, opts) {
       }
     }
   );
+
+  // GET /ticketbox/:short_code — support prefixed links
+  fastify.get(
+    "/ticketbox/:short_code",
+    {
+      schema: {
+        params: {
+          type: "object",
+          properties: {
+            short_code: { type: "string", pattern: "^[0-9A-Za-z]+$" },
+          },
+          required: ["short_code"],
+        },
+        response: {
+          301: { type: "null" },
+          404: {
+            type: "object",
+            properties: { error: { type: "string" } },
+          },
+          503: {
+            type: "object",
+            properties: { error: { type: "string" } },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      if (!isRedisReady()) {
+        return reply.code(503).send({ error: "Service Unavailable" });
+      }
+
+      const { short_code: code } = request.params;
+      try {
+        const longUrl = await fetchLongUrlByCode(redis, code);
+        if (!longUrl) {
+          return reply.code(404).send({ error: "Not found" });
+        }
+        reply.header("Location", longUrl);
+        return reply.code(301).send();
+      } catch (err) {
+        if (!isRedisReady()) {
+          return reply.code(503).send({ error: "Service Unavailable" });
+        }
+        return reply.code(500).send({ error: "Internal Server Error" });
+      }
+    }
+  );
 };
